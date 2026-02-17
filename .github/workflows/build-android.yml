@@ -11,53 +11,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up JDK 11
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
-        distribution: 'temurin'
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: "11"
+          distribution: "temurin"
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
-    - name: Install dependencies
-      run: |
-        npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Check project files
-      run: |
-        echo "=== Root directory files ==="
-        ls -la
-        echo "=== Looking for entry file ==="
-        find . -maxdepth 2 -name "*.js" -o -name "*.json" | head -20
+      - name: Check project files
+        run: |
+          echo "=== Root directory files ==="
+          ls -la
+          echo "=== Looking for entry file ==="
+          find . -maxdepth 2 -name "*.js" -o -name "*.json" | head -20
 
-    - name: Bundle JS and assets
-      run: |
-        mkdir -p android/app/src/main/assets
-        
-        # Определяем входной файл
-        if [ -f "index.js" ]; then
-          ENTRY_FILE="index.js"
-        elif [ -f "index.android.js" ]; then
-          ENTRY_FILE="index.android.js"
-        elif [ -f "App.js" ]; then
-          ENTRY_FILE="App.js"
-        else
-          echo "ERROR: No entry file found!"
-          exit 1
-        fi
-        
-        echo "Using entry file: $ENTRY_FILE"
-        
-        # Проверяем наличие metro.config.js
-        if [ ! -f "metro.config.js" ]; then
-          echo "Warning: metro.config.js not found, creating default..."
-          cat > metro.config.js << 'EOF'
+      - name: Bundle JS and assets
+        run: |
+          mkdir -p android/app/src/main/assets
+
+          if [ -f "index.js" ]; then
+            ENTRY_FILE="index.js"
+          elif [ -f "index.android.js" ]; then
+            ENTRY_FILE="index.android.js"
+          elif [ -f "App.js" ]; then
+            ENTRY_FILE="App.js"
+          else
+            echo "ERROR: No entry file found!"
+            exit 1
+          fi
+
+          echo "Using entry file: $ENTRY_FILE"
+
+          if [ ! -f "metro.config.js" ]; then
+            echo "Warning: metro.config.js not found, creating default..."
+            cat > metro.config.js <<EOF
 module.exports = {
   transformer: {
     getTransformOptions: async () => ({
@@ -69,25 +66,24 @@ module.exports = {
   },
 };
 EOF
-        fi
-        
-        # Запускаем bundle
-        npx react-native bundle \
-          --platform android \
-          --dev false \
-          --entry-file $ENTRY_FILE \
-          --bundle-output android/app/src/main/assets/index.android.bundle \
-          --assets-dest android/app/src/main/res \
-          --config metro.config.js
-          
-    - name: Build Debug APK
-      run: |
-        cd android
-        chmod +x gradlew
-        ./gradlew assembleDebug
+          fi
 
-    - name: Upload Debug APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-debug-apk
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file $ENTRY_FILE \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res \
+            --config metro.config.js
+
+      - name: Build Debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
