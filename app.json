@@ -17,7 +17,7 @@
       "**/*"
     ],
     "ios": {
-      "bundleIdentifier": "com.auto.parts"
+      "bundleIdentifier": "com.auto.parts",
       "supportsTablet": true,
       "userInterfaceStyle": "automatic"
     },
