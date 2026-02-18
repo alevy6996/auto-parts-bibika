@@ -36,48 +36,48 @@ export default function LoginForm({ onLoading }: LoginFormProps) {
     }, [isLoading]);
 
     const submitForm = async ({ login, password }: LoginFormValues) => {
-    try {
-        // ВРЕМЕННО: тестовые данные для входа
-        // Любой логин/пароль будет работать
-        const testUser = {
-            id: 1,
-            name: "Тестовый Пользователь",
-            login: login || "test",
-            // Добавьте сюда поля, которые нужны вашему приложению
-            // Например:
-            email: "test@example.com",
-            role: "user",
-            // посмотрите в user-state.model.ts какие поля нужны
-        };
+        try {
+            // ТЕСТОВЫЕ ДАННЫЕ: точно соответствуют интерфейсу UserResponse
+            const testUser = {
+                id: 1,
+                code: 12345,
+                email: login ? `${login}@example.com` : "test@example.com",
+                name: "Тестовый Пользователь",
+                mobile: "+7 (999) 123-45-67",
+                organization: "ООО Тестовая Организация"
+            };
 
-        // Сохраняем тестовые данные в SecureStore
-        await SecureStoreService.setUserData(
-            login || "test", 
-            md5(password || "test")  // Хэшируем как в оригинале
-        );
+            // Сохраняем тестовые данные в SecureStore
+            await SecureStoreService.setUserData(
+                login || "test", 
+                md5(password || "test")
+            );
 
-        // Устанавливаем данные для HTTP клиента
-        setHttpClientUserAuthData(login || "test", password || "test");
+            // Устанавливаем данные для HTTP клиента
+            setHttpClientUserAuthData(login || "test", password || "test");
 
-        // Отправляем пользователя в Redux store
-        dispatch(UserActions.setUser(testUser));
-        
-        // Убираем лоадер
-        setIsLoading(false);
-        
-    } catch (err) {
-        setIsLoading(false);
-        ToastService.error("Ошибка входа, но мы всё равно пустим :)");
-        
-        // ДАЖЕ при ошибке пускаем с тестовыми данными
-        const fallbackUser = {
-            id: 1,
-            name: "Тестовый Пользователь (fallback)",
-            login: login || "test",
-        };
-        dispatch(UserActions.setUser(fallbackUser));
-    }
-};
+            // Отправляем пользователя в Redux store
+            dispatch(UserActions.setUser(testUser));
+            
+            // Убираем лоадер
+            setIsLoading(false);
+            
+        } catch (err) {
+            setIsLoading(false);
+            ToastService.error("Ошибка входа, но мы всё равно пустим :)");
+            
+            // Запасной вариант при ошибке
+            const fallbackUser = {
+                id: 1,
+                code: 12345,
+                email: "fallback@example.com",
+                name: "Тестовый Пользователь (fallback)",
+                mobile: "+7 (999) 111-22-33",
+                organization: "ООО Запасная Организация"
+            };
+            dispatch(UserActions.setUser(fallbackUser));
+        }
+    };
 
     return (
         <VStack spacing={30} fill justify='center'  mh={4 * APP_MARGIN}>
