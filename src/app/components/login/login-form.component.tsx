@@ -36,25 +36,48 @@ export default function LoginForm({ onLoading }: LoginFormProps) {
     }, [isLoading]);
 
     const submitForm = async ({ login, password }: LoginFormValues) => {
-        try {
-            password = md5(password);
+    try {
+        // ВРЕМЕННО: тестовые данные для входа
+        // Любой логин/пароль будет работать
+        const testUser = {
+            id: 1,
+            name: "Тестовый Пользователь",
+            login: login || "test",
+            // Добавьте сюда поля, которые нужны вашему приложению
+            // Например:
+            email: "test@example.com",
+            role: "user",
+            // посмотрите в user-state.model.ts какие поля нужны
+        };
 
-            // Make a request on a separate http client to avoid re-register main client
-            const user = await checkAuth({ login, password }).unwrap();
-            setHttpClientUserAuthData(login, password);
+        // Сохраняем тестовые данные в SecureStore
+        await SecureStoreService.setUserData(
+            login || "test", 
+            md5(password || "test")  // Хэшируем как в оригинале
+        );
 
-            await SecureStoreService.setUserData(login, password);
+        // Устанавливаем данные для HTTP клиента
+        setHttpClientUserAuthData(login || "test", password || "test");
 
-            dispatch(UserActions.setUser(user));
-        } catch (err) {
-            setIsLoading(false);
-
-            const error = new NetworkError(err as NetworkError);
-            const errorMessage = ResponseService.getErrorMessage(error);
-
-            ToastService.error(errorMessage);
-        }
-    };
+        // Отправляем пользователя в Redux store
+        dispatch(UserActions.setUser(testUser));
+        
+        // Убираем лоадер
+        setIsLoading(false);
+        
+    } catch (err) {
+        setIsLoading(false);
+        ToastService.error("Ошибка входа, но мы всё равно пустим :)");
+        
+        // ДАЖЕ при ошибке пускаем с тестовыми данными
+        const fallbackUser = {
+            id: 1,
+            name: "Тестовый Пользователь (fallback)",
+            login: login || "test",
+        };
+        dispatch(UserActions.setUser(fallbackUser));
+    }
+};
 
     return (
         <VStack spacing={30} fill justify='center'  mh={4 * APP_MARGIN}>
